@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="KO">
+<head>
+
+    <meta charset="UTF-8">
+    <title>COUNTER</title>
+    <link rel="stylesheet" type="text/css" href="css/style.css">
+	<link rel="stylesheet" type="text/css" href="css/bootstrap.min.css">
+	<script type="text/javascript" src="/js/jquery.min.js"></script>
+	<script type="text/javascript" src="/js/bootstrap.min.js"></script>
+
+    <script>
+        var url;
+        var url_host = "http://localhost:4000/";
+        var ccId = "counter";
+        var counterList;
+        var user_name = "<%=username%>";
+
+		var jwt = "<%=jwt%>";
+        
+        function login() {
+            url = url_host + "users";
+            user_name = $("#userName").val();
+            var password = $("#password").val();
+            
+            var JSONdata = {
+                username: user_name,
+                orgName: "Org1"
+            };
+            executeJsonRpc('post', url, JSONdata,
+                          function success(data) {
+					jwt = data.token;
+
+					console.log("jwt = " + jwt);
+
+                    console.log("login success!!");
+                },
+                          function error(data) {
+                    console.log("login error");
+                }
+            );
+        }
+        
+        function deploy() {
+            url = url_host + "chaincodes";
+            var JSONdata = createJSONdataForCounterApp("deploy", "init", [], 1);
+            executeJsonRpc('post', url, JSONdata, function success(data) {
+                ccId = data.result.message;
+                console.log("deploy success!  ccId: " + ccId);
+            }, function error(data) {
+               console.log("deploy error"); 
+            });
+        }
+        
+        function refresh() {
+            if (counterList != null) {
+                var table = document.getElementById('list');
+                
+                for (var i = counterList.length; i > 0; i--) {
+                    table.deleteRow(i);
+                }
+            }
+            
+            getCounts();
+        }
+        
+        function countUp() {
+            url = url_host + "channels/mychannel/chaincodes/" + ccId;
+            var targetIndex;
+            var counterList = document.getElementsByName("counter");
+            
+            for (i = 0; i < counterList.length; i++) {
+                if (counterList[i].checked) {
+                    targetIndex = counterList[i].value;
+                }
+            }
+            
+            var JSONdata = createJSONdataForCounterApp("invoke", "countUp", [targetIndex], 3);
+            
+            executeJsonRpc('post', url, JSONdata, 
+                    function success(data) {
+                        console.log("countUp success!");
+                },
+                    function error(data) {
+						console.log(data);
+                        console.log("countUp error");
+                }
+            );
+        }
+        
+        function getCounts() {
+            url = url_host + "channels/mychannel/chaincodes/" + ccId;
+            var JSONdata = createJSONdataForCounterApp("query", "query", "['']", 5);
+            
+            console.log(JSONdata);
+        
+            executeJsonRpc('get', url, JSONdata,
+                          function success(data) {
+                            counterList = JSON.parse(data);
+                            var table = document.getElementById('list');
+                
+                            for (var i = 0; i < counterList.length; i++) {
+                                var counter = counterList[i];
+                                console.log("[" + i + "]", counter);
+                                
+                                var row = table.insertRow();
+                                var td = row.insertCell(0);
+                                var radioButton1 = document.createElement('input');
+                                radioButton1.type = 'radio';
+                                radioButton1.name = 'counter';
+                                radioButton1.value = i;
+                                
+                                td.appendChild(radioButton1);
+                                td = row.insertCell(1);
+                                
+                                td.innerHTML = counter.name;
+                                
+                                td = row.insertCell(2);
+                                td.innerHTML = counter.counts;
+                            }
+                },
+                        function error(data) {
+                            console.log("refresh error");
+                }
+            );
+        }
+        
+        function createJSONdataForCounterApp(method, functionName, args, id) {
+            var JSONdata = {
+                "jsonrpc": "2.0",
+				"peer" : "peer0.org1.example.com", 
+				"peers": ["peer0.org1.example.com",
+					"peer1.org1.example.com"],
+                "method": method,
+                "fcn": functionName,
+				"args": args,
+				"params": {
+					"fcn": functionName,
+					"args": args
+				}
+            };
+            
+            if (functionName == "init") {
+                JSONdata.params["chaincodeID"] = {
+                    path: "github.com/hyperledger/fabric/examples/chaincode/go/chaincode_counter",
+                    name: "counter0"
+                };
+            } else {
+                JSONdata.params["chaincodeID"] = {
+                    name: ccId
+                };
+            }
+            
+            return JSONdata;
+        }
+        
+        function executeJsonRpc(url_type, url_exec, JSONdata, success, error) {
+            
+			console.log(JSON.stringify(JSONdata));
+			$.ajax({
+                type: url_type,
+                url: url_exec,
+				data: JSONdata,
+                //contentType: 'application/JSON;',
+                //dataType: 'JSON',
+                scriptCharset: 'utf-8',
+				headers: {
+					"Authorization": "Bearer " + jwt
+				},
+                success: function(data) {
+                    console.log(data);
+                    success(data);
+                },
+                error: function(data) {
+					console.log(data);
+                    error(data);
+                } 
+            });
+        }
+    </script>
+</head>
+<body>
+    <p>
+        사용자 이름:&nbsp;<input type="text" id="userName" value="<%=username%>">&nbsp;
+        패스워드:&nbsp;<input type="text" id="password" value="$<%=jwt%>">&nbsp;
+                    <!--<input type="button" value="login" onclick="login();"/>-->
+    </p>
+    <p>
+        <input type="button" value="deploy" onclick="deploy();"/>
+    </p>
+    
+    <table id="list" border="1">
+        <tr>
+            <th></th>
+            <th>name</th>
+            <th>counts</th>
+        </tr>
+    </table>
+    <br />
+    <input type="button" value="countUp" onclick="countUp();" />
+    <br />
+    <input type="button" value="refresh" onclick="refresh();" />
+</body>
+</html>

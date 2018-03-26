@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>모니터링 도구</title>
+    <link rel="stylesheet" type="text/css" href="css/style.css">
+    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/2.1.0/jquery.min.js"></script>
+    
+    <script>
+        var url_ccInfo = "http://localhost:5000/chain";
+        var url_prefix = "http://localhost:5000/chain/blocks/";
+        var blockNum = 1;
+        var chainHeight;
+        var stop = false;
+        
+        function startMonitor() {
+            stop = false;
+            
+            var table = document.getElementById('list');
+            
+            getChainInfo(function success(data) {
+               chainHeight = data.height;
+                
+                for (var i = 1; i < chainHeight; i++) {
+                    getBlockInfo(data, table);
+                }
+            }, function error(data) {});
+            
+            setInterval(function(data, table) {
+                watchBlock(data, table);
+            }, 1000);
+        }
+        
+        function stopWatch() {
+            stop = true;
+            console.log("stop!");
+        }
+        
+        function getChainInfo(success, error) {
+            url = url_ccInfo;
+            
+            $.ajax({
+                type:'get',
+                url: url,
+                contentType: 'application/JSON',
+                dataType: 'JSON',
+                scriptCharset: 'UTF-8',
+                success: function(data) {
+                    success(data);
+                },
+                error: function(data) {
+                    error(data);
+                }
+            });
+        }
+        
+        function getBlockInfo(data, table) {
+            executeJsonRpc(function success(data) {
+                insertBlockRow(data, table);
+            }, function error(data) {
+                if (!data.responseText.match()) {
+                    insertErrBlockRow(table);   
+                }
+            });
+        }
+        
+        function insertBlockRow(data, table) {
+
+            var row = table.insertRow();
+            
+            var td = row.insertCell(0);
+            td.innerHTML = blockNum++;
+            
+            var td = row.insertCell(1);
+            var date = new Date(
+                parseInt(data.transactions[0].timestamp.seconds) * 1000
+            );
+            td.innerHTML = date.toString();
+            
+            var td = row.insertCell(2);
+            td.innerHTML = data.previousBlockHash;
+            
+            var td = row.insertCell(3);
+            td.innerHTML = data.transactions[0].nonce;
+            
+            var td = row.insertCell(4);
+            td.innerHTML = "<input type='text' value='" + JSON.stringify(data.transactions) + "'/></td>";
+        }
+        
+        function insertErrBlockRow(table) {
+            var row = table.insertRow();
+            
+            var td = row.insertCell(0);
+            td.innerHTML = blockNum++;
+            
+            var td = row.insertCell(1);
+            td.innerHTML = "";
+            
+            var td = row.insertCell(2);
+            td.innerHTML = "";
+            
+            var td = row.insertCell(3);
+            td.innerHTML = "";
+            
+            var td = row.insertCell(4);
+            td.innerHTML = "";
+        }
+        
+        function watchBlock(data, table) {
+            var table = document.getElementById('list');
+        
+            if (stop) {
+                return;
+            }
+            
+            getBlockInfo(data, table);
+        }
+        
+        function executeJsonRpc(success, error) {
+            url = url_prefix + blockNum;
+            
+            $.ajax({
+                async: false,
+                type: 'get',
+                url: url,
+                contentType: 'application/JSON',
+                dataType: 'JSON',
+                scriptCharset: 'UTF-8',
+                success: function(data) {
+                    success(data);
+                },
+                error: function(data) {
+                    error(data);
+                }
+            });
+        }
+    </script>
+</head>
+<body>
+    <br />
+    <input type="button" value="start" onclick="startMonitor();" />
+    <input type="button" value="stop" onclick="stopWatch();" />
+    <table id="list">
+        <tr>
+            <th>Block<br />Number</th>
+            <th>TimeStamp</th>
+            <th>BlockHash</th>
+            <th>Nonce</th>
+            <th>Transaction</th>
+        </tr>
+    </table>
+</body>
+</html>

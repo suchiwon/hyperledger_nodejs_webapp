@@ -1,0 +1,19 @@
+body {
+    background-color: black;
+    color: white;
+}
+
+#list {
+    border: 1px solid;
+    border-color:azure;
+}
+
+th {
+    border: 1px solid;
+    border-color:blue;
+}
+
+td {
+    border: 1px solid;
+    border-color: firebrick;
+}

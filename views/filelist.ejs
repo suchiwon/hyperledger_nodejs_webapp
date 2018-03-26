@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="KO">
+<head>
+
+    <meta charset="UTF-8">
+    <title>COUNTER</title>
+    <link rel="stylesheet" type="text/css" href="css/bootstrap.min.css">
+    <script type="text/javascript" src="/js/jquery.min.js"></script>
+	<script type="text/javascript" src="/js/bootstrap.min.js"></script>
+    
+    <script>
+        var fileList;
+        var user_name = "<%=username%>";
+		var base_url = "http://localhost:3000/";
+
+		$(function() {
+			
+			function refresh() {
+				$('#list_table_tbody').empty();
+
+				$.ajax ({
+					url: base_url + "getFilelist/1",
+					type: 'GET',
+					dataType: "json",
+					success: function(data) {
+
+						var tbody = document.getElementById("list_table_tbody");
+
+						$.each(data, function(key, value) {
+							//alert('name: ' + value.name + ' originName: ' + value.originName + ' author: ' + value.author);
+							var row = tbody.insertRow();
+							var td = row.insertCell(0);
+							td.setAttribute("name", "name");
+							td.innerHTML = value.name;
+
+							td = row.insertCell(1);
+							td.setAttribute("name", "filename");
+							td.innerHTML = value.originName;
+
+							td = row.insertCell(2);
+							td.innerHTML = value.author;
+
+						});
+					},
+					error: function(data) {
+						alert('getFilelist error');
+					}
+				})
+			}
+
+			$('#refreshBtn').click( function() {
+				refresh();
+			});
+
+			$('.filename').click( function() {
+				var index = $('.filename').index(this);
+
+				var origin = $('.name').get(index).val();
+
+				alert(origin);
+			});
+		})
+    </script>
+</head>
+<body>
+    <p>
+        사용자 이름:&nbsp;<input type="text" id="userName" value="test_user0">&nbsp;
+    </p>
+    
+    <table id="list" border="1">
+        <tr>
+            <th></th>
+            <th>name</th>
+            <th>uploader</th>
+        </tr>
+		<tbody id="list_table_tbody">
+		</tbody>
+    </table>
+    <br />
+	<form action="/uploadFile" method="POST" enctype="multipart/form-data">
+		<input type="file" name="user_file"/>
+		<input type="submit" value="upload"/>
+    <input type="button" id="refreshBtn" value="refresh" />
+</body>
+</html>
+            
