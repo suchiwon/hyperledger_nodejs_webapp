@@ -34,7 +34,7 @@ exports.executeJsonRpc = function (request, url_type, url_exec, func, args, jwt,
 			if (!err) {
 				success(body);
 			} else {
-				console.log(err.Error());
+				console.log(err);
 				error(body);
 			}
 		});

@@ -14,6 +14,22 @@
 		var base_url = "http://localhost:3000/";
 
 		$(function() {
+	
+			$(document).on('click', '.filename', function() {
+				var index = $('.filename').index(this);
+
+				var originName = $('.name').get(index);
+				var filename = $('.filename').get(index);
+				var hash = $('.hash').get(index);
+
+				$('#download_filename').val(originName.innerHTML);
+				$('#download_originName').val(filename.innerHTML);
+				$('#download_hash').val(hash.innerHTML);
+
+				alert($('#download_filename').val());
+
+				$('#downloadForm').submit();
+			});
 			
 			function refresh() {
 				$('#list_table_tbody').empty();
@@ -30,15 +46,20 @@
 							//alert('name: ' + value.name + ' originName: ' + value.originName + ' author: ' + value.author);
 							var row = tbody.insertRow();
 							var td = row.insertCell(0);
-							td.setAttribute("name", "name");
+							td.setAttribute("class", "name");
 							td.innerHTML = value.name;
 
 							td = row.insertCell(1);
-							td.setAttribute("name", "filename");
+							td.setAttribute("class", "filename");
 							td.innerHTML = value.originName;
 
 							td = row.insertCell(2);
 							td.innerHTML = value.author;
+
+							td = row.insertCell(3);
+							td.setAttribute("class", "hash");
+							td.setAttribute("style", "display:none;");
+							td.innerHTML = value.bytes;
 
 						});
 					},
@@ -50,14 +71,6 @@
 
 			$('#refreshBtn').click( function() {
 				refresh();
-			});
-
-			$('.filename').click( function() {
-				var index = $('.filename').index(this);
-
-				var origin = $('.name').get(index).val();
-
-				alert(origin);
 			});
 		})
     </script>
@@ -80,7 +93,13 @@
 	<form action="/uploadFile" method="POST" enctype="multipart/form-data">
 		<input type="file" name="user_file"/>
 		<input type="submit" value="upload"/>
-    <input type="button" id="refreshBtn" value="refresh" />
+    	<input type="button" id="refreshBtn" value="refresh" />
+	</form>
+	<form id="downloadForm" action="/downloadFile" method="POST">
+		<input type="hidden" id="download_filename" name="download_filename"/>
+		<input type="hidden" id="download_originName" name="download_originName"/>
+		<input type="hidden" id="download_hash" name="download_hash"/>
+	</form>
 </body>
 </html>
             

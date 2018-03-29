@@ -1,10 +1,9 @@
-module.exports = function(app, fs, jsonrpc) {
+module.exports = function(app, fs, jsonrpc, crypto) {
 
 	var multer = require('multer');
 	var path = require('path');
 	var request = require('ajax-request');
-
-	var crypto = require('crypto');
+	var url = require('url');
 
 	const url_host = "http://localhost:4000/";
 
@@ -39,7 +38,7 @@ module.exports = function(app, fs, jsonrpc) {
 					if (!err) {
 						fs.read(fd, buf, 0, req.file.size, 0, function(err) {
 							if (!err) {
-								hashbuf = crypto.createHash("sha256").update(buf.toString()).digest("base64");
+								hashbuf = crypto.getHash(buf.toString());
 								console.log(hashbuf.toString());
 
 								var JSONdata = jsonrpc.makeJSONdata("upload", 
@@ -93,4 +92,80 @@ module.exports = function(app, fs, jsonrpc) {
 					res.end("getFilelist error");
 				});
 	});
+
+
+	app.post('/downloadFile', function(req, res) {
+		var filename = req.body.download_filename;
+		var originName = req.body.download_originName;
+		var hash = req.body.download_hash;
+
+		var filepath = __dirname + "/../upload/" + filename;
+
+		console.log("filepath : " + filepath);
+
+		var filebuf;
+
+		try {
+			filebuf = fs.readFileSync(filepath, 'utf8');
+		} catch (err) {
+		
+			console.log("readFileSync error :" + err);
+
+			if (err.code === 'ENOENT') {
+				res.redirect(url.format({
+						pathname: "/errAlert",
+						query: {
+							"msg": originName + " not found"	
+						}
+				}));
+			} else {
+				res.redirect(url.format({
+					pathname: "/errAlert",
+					query: {
+						"msg": originName + " download error"	
+					}
+				}));
+			}
+		}
+
+		var originHash = crypto.getHash(filebuf).toString();
+
+		console.log("hash test : " + hash + " " + originHash);
+
+		if (hash == originHash) {
+			res.download( filepath, originName, function(err) {
+				if (err) {
+					console.log(err);
+				} else {
+					console.log("download success");
+				}
+			});
+		} else {
+			res.redirect(url.format({
+				pathname: "/errAlert",
+				query: {
+					"msg": originName + " is modified"	
+				}
+			}));
+		}
+	});
+
+	app.get('/errAlert', function(req, res) {
+		var msg = req.params.msg;
+
+		res.end('<script>alert("' + msg + '"); location.href="/filelist";</script>');
+	});
+
+	app.get('/nofileAlert/:msg', function(req, res) {
+		var msg = req.params.msg;
+
+		res.end('<script>alert("' + msg + ' not found"); location.href="/filelist";</script>');
+	});
+
+	app.get('/hashErrAlert/:msg', function(req, res) {
+		var msg = req.params.msg;
+
+		res.end('<script>alert("' + msg + ' is modified"); location.href="/filelist";</script>');
+	});
+
 }

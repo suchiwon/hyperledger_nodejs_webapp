@@ -1,4 +1,4 @@
-module.exports = function(app, fs, jsonrpc) {
+module.exports = function(app, fs, jsonrpc, crypto) {
 
 	var url_host = "http://localhost:4000/";
 
