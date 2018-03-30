@@ -10,6 +10,8 @@ var app = express();
 var jsonrpc = require('./js/jsonrpc');
 var crypto = require('./js/crypto');
 
+var mongoDB = require('./js/mongoDB');
+
 app.set('views', __dirname + '/views');
 app.set('view engine', 'ejs');
 app.engine('jsp', require('ejs').renderFile);
@@ -32,8 +34,8 @@ app.use(session({
 
 app.use('/upload', express.static('uploads'));
 
-var router = require('./router/main')(app, fs, jsonrpc, crypto);
-var filesRouter = require("./router/files")(app, fs, jsonrpc, crypto);
+var router = require('./router/main')(app, fs, jsonrpc, crypto, mongoDB);
+var filesRouter = require("./router/files")(app, fs, jsonrpc, crypto, mongoDB);
 
 //app.use('/', router);
 //app.use('/upload', uploadRouter);

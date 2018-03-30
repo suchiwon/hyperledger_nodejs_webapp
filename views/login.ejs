@@ -1,11 +1,16 @@
 <!DOCTYPE html>
 <html>
 <body>
-	<form action="login" method="POST" name="loginForm">
-		<input type="text" name="username" id="username"><br>
-		<input type="password" name="password" id="password"><br>
+	<div class="container">
+	<div class="card card-container">
+		<form class="form-signin" action="login" method="POST" name="loginForm">
+		<span id="reauth-email" class="reauth-email"></span>
+			<input type="text" name="username" id="username" class="form-control" placeholder="username" required autofocus><br>
+			<input type="password" name="password" id="password" class="form-control" placeholder="password" required><br>
 
-		<input type="submit" value="login">
-	</form>
+			<button class="btn btn-lg btn-primary btn-block btn-signin" type="submit" value="login">login</button>
+		</form>
+	</div>
+	</div>
 </body>
 </html>

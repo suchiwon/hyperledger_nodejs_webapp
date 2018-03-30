@@ -20,7 +20,10 @@ module.exports = function(app, fs, jsonrpc, crypto) {
 
 	let upload = multer({
 		//storage: storage
-		  dest: "upload/" 
+		  dest: "upload/",
+		  limits: {
+		  	fileSize: 50 * 1024 * 1024
+		  }
 	}).single("user_file");
 
 	app.post('/uploadFile', upload, function (req, res) {
@@ -81,7 +84,7 @@ module.exports = function(app, fs, jsonrpc, crypto) {
 		*/
 
 		jsonrpc.executeJsonRpc(request, "GET", "channels/mychannel/chaincodes/files",
-				"getFilelist", ["1", "6"], req.session.jwt,
+				"getFilelist", ["1", "10"], req.session.jwt,
 				function success(data) {
 					console.log("getFilelist");
 					console.log(data);
@@ -151,21 +154,9 @@ module.exports = function(app, fs, jsonrpc, crypto) {
 	});
 
 	app.get('/errAlert', function(req, res) {
-		var msg = req.params.msg;
+		var msg = req.query.msg;
 
+		res.set({ 'content-type': 'charset=utf-8' });
 		res.end('<script>alert("' + msg + '"); location.href="/filelist";</script>');
 	});
-
-	app.get('/nofileAlert/:msg', function(req, res) {
-		var msg = req.params.msg;
-
-		res.end('<script>alert("' + msg + ' not found"); location.href="/filelist";</script>');
-	});
-
-	app.get('/hashErrAlert/:msg', function(req, res) {
-		var msg = req.params.msg;
-
-		res.end('<script>alert("' + msg + ' is modified"); location.href="/filelist";</script>');
-	});
-
 }

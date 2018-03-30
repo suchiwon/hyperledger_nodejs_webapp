@@ -1,3 +1,4 @@
 upload/
 *.swp
 node_module/
+pacakge-lock.json
