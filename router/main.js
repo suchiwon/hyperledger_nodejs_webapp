@@ -51,7 +51,7 @@ module.exports = function(app, fs, jsonrpc, crypto, mongoDB) {
 		var result = {};
 
 		mongoDB.getUserInfo(username, function(err, data) {
-			if (!err) {
+			if (!err && data !== null) {
 
 				console.log("login info:" + data);
 				var passwordHash = crypto.getHash(password);

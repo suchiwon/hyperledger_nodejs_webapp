@@ -15,8 +15,8 @@
 
 		$(function() {
 	
-			$(document).on('click', '.filename', function() {
-				var index = $('.filename').index(this);
+			$(document).on('click', '.btn-download', function() {
+				var index = $('.btn-download').index(this);
 
 				var originName = $('.name').get(index);
 				var filename = $('.filename').get(index);
@@ -25,8 +25,6 @@
 				$('#download_filename').val(originName.innerHTML);
 				$('#download_originName').val(filename.innerHTML);
 				$('#download_hash').val(hash.innerHTML);
-
-				alert($('#download_filename').val());
 
 				$('#downloadForm').submit();
 			});
@@ -45,18 +43,25 @@
 						$.each(data, function(key, value) {
 							//alert('name: ' + value.name + ' originName: ' + value.originName + ' author: ' + value.author);
 							var row = tbody.insertRow();
-							var td = row.insertCell(0);
-							td.setAttribute("class", "name");
-							td.innerHTML = value.name;
 
-							td = row.insertCell(1);
+							var td = row.insertCell(0);
 							td.setAttribute("class", "filename");
 							td.innerHTML = value.originName;
 
-							td = row.insertCell(2);
+							td = row.insertCell(1);
 							td.innerHTML = value.author;
 
+							td = row.insertCell(2);
+							td.setAttribute("class", "text-center");
+							td.innerHTML = "<button class='btn btn-download btn-info btn-xs'><span class='glyphicon glyphicon-edit'></span> Download</button>";
+							
 							td = row.insertCell(3);
+							td.setAttribute("style", "display:none;");
+							td.setAttribute("class", "name");
+							td.innerHTML = value.name;
+
+
+							td = row.insertCell(4);
 							td.setAttribute("class", "hash");
 							td.setAttribute("style", "display:none;");
 							td.innerHTML = value.bytes;
@@ -72,29 +77,53 @@
 			$('#refreshBtn').click( function() {
 				refresh();
 			});
+
+			/*
+			$('#uploadBtn').click( function() {
+			});
+			*/
+
+			$(document).ready(function() {
+				refresh();		
+			});
 		})
     </script>
 </head>
 <body>
-    <p>
-        사용자 이름:&nbsp;<input type="text" id="userName" value="test_user0">&nbsp;
-    </p>
-    
+   	<div class="container"> 
+	<div class="table table-striped custab">
     <table id="list" border="1">
+	<thead>
         <tr>
-            <th></th>
             <th>name</th>
             <th>uploader</th>
+			<th class="text-center">action</th>
         </tr>
+	</thead>
 		<tbody id="list_table_tbody">
 		</tbody>
     </table>
+	</div>
+	</div>
     <br />
+	<div class="container">
+	<div class="row">
+	<div class="col-xs-12 col-md-6 col-db-offset-3 col-sm-8 col-sm-offset-2">
+	<div class="input-group image-preview">
+
 	<form action="/uploadFile" method="POST" enctype="multipart/form-data">
-		<input type="file" name="user_file"/>
-		<input type="submit" value="upload"/>
-    	<input type="button" id="refreshBtn" value="refresh" />
+		<span class="input-group-btn">
+			<input type="file" name="user_file"/>
+			<button id="uploadBtn" type="submit" value="upload"><span class="glyphicon glyphicon-folder-open"></span>upload</button>
+		</span>
 	</form>
+		<button id="refreshBtn" value="refresh">refresh</button>
+
+	</div>
+	</div>
+	</div>
+	</div>
+
 	<form id="downloadForm" action="/downloadFile" method="POST">
 		<input type="hidden" id="download_filename" name="download_filename"/>
 		<input type="hidden" id="download_originName" name="download_originName"/>

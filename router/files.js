@@ -23,14 +23,30 @@ module.exports = function(app, fs, jsonrpc, crypto) {
 		  dest: "upload/",
 		  limits: {
 		  	fileSize: 50 * 1024 * 1024
-		  }
+			},
+			fileFilter: function (req, file, cb) {
+
+				console.log("fileextension: " + path.extname(file.originalname));
+				if (path.extname(file.originalname) !== '.pdf') {
+					req.fileValidationError = 'file not pdf';
+					return cb(null, false, new Error('file not pdf'));
+				}
+
+				cb(null, true);
+			}
 	}).single("user_file");
 
 	app.post('/uploadFile', upload, function (req, res) {
 
+		var result = "success";
+
 		upload(req, res, function(err) {
-			if (err) {
-				console.log('error while uploading file: ' + err);
+			if (req.fileValidationError) {
+
+				result = "fileValidationError";
+			} else if (err) {
+
+				result = err.toString();
 			} else {
 			
 				var buf = new Buffer(req.file.size);
@@ -54,21 +70,40 @@ module.exports = function(app, fs, jsonrpc, crypto) {
 											console.log("uploaded file: " + req.file.toString());
 										},
 										function error(data) {
+											result = data.toString();
 											console.log("upload file to blockchain error: " + data);
 								});
 							} else {
+								result = "fs read error";
 								console.log("fs read error");
 							}
 						});
 					} else {
+						result = "fs open error";
 						console.log("fs open error");
 					}
 				});
-					console.log(req.file);
-				}	
-			});
+			}
+		});
 
-		res.redirect("/filelist");
+		if (result == "fileValidationError") {
+			res.redirect(url.format({
+				pathname: "/errAlert",
+				query: {
+					"msg": "upload file not pdf"	
+				}
+			}));
+		} else if (result == "success") {
+			res.redirect("/filelist");
+		} else {
+			res.redirect(url.format({
+					pathname: "/errAlert",
+					query: {
+						"msg": 'error while uploading file: ' + err
+					}
+			}));
+		}
+
 	});
 
 	app.get('/getFilelist/:pageIndex', function (req, res) {
@@ -114,7 +149,8 @@ module.exports = function(app, fs, jsonrpc, crypto) {
 		
 			console.log("readFileSync error :" + err);
 
-			if (err.code === 'ENOENT') {
+			//if (err.code == 'ENOENT') {
+			if (false) {
 				res.redirect(url.format({
 						pathname: "/errAlert",
 						query: {
